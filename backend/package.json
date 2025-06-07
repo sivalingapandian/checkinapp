@@ -1,0 +1,28 @@
+{
+  "name": "therapist-checkin-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Backend for therapist check-in system",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/client-ses": "^3.0.0",
+    "@aws-sdk/client-sns": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "aws-sdk": "^2.1692.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/aws-sdk": "^0.0.42",
+    "@types/node": "^18.19.111",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.8.3"
+  }
+}

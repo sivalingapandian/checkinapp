@@ -1,0 +1,23 @@
+{
+  "name": "infrastructure",
+  "version": "1.0.0",
+  "description": "Infrastructure code for Therapist Check-in System",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0",
+    "source-map-support": "^0.5.21",
+    "typescript": "^5.0.0"
+  }
+}
