@@ -36,6 +36,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
+    // Handle GET request to list therapists
+    if (event.httpMethod === 'GET') {
+      const therapists = await therapistModel.list();
+      return {
+        statusCode: 200,
+        headers: corsHeaders,
+        body: JSON.stringify(therapists),
+      };
+    }
+
     if (!event.body) {
       return {
         statusCode: 400,

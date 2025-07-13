@@ -139,6 +139,7 @@ export class TherapistCheckinStack extends cdk.Stack {
 
     const checkIn = api.root.addResource('check-in');
     checkIn.addMethod('POST', new apigateway.LambdaIntegration(checkInFunction));
+    checkIn.addMethod('GET', new apigateway.LambdaIntegration(checkInFunction));
 
     const therapists = api.root.addResource('therapists');
     therapists.addMethod('GET', new apigateway.LambdaIntegration(therapistsFunction));

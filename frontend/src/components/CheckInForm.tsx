@@ -49,7 +49,9 @@ const CheckInForm: React.FC = () => {
       }
 
       try {
-        const response = await fetch(config.therapistsEndpoint, {
+        // Fetch therapists from the check-in endpoint using GET
+        const response = await fetch(config.apiEndpoint, {
+          method: 'GET',
           headers: {
             'x-api-key': token,
           },
