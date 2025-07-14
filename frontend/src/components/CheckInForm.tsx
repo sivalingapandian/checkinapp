@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  TextField,
   Button,
   FormControl,
   InputLabel,
@@ -10,34 +9,16 @@ import {
   Typography,
   Container,
   Paper,
+  Alert,
 } from '@mui/material';
-import { CheckInFormData, Therapist, TimeSlot } from '../types';
+import { Therapist } from '../types';
 import { config } from '../config';
 
-const generateTimeSlots = (): TimeSlot[] => {
-  const slots: TimeSlot[] = [];
-  for (let hour = 7; hour <= 19; hour++) {
-    for (let minute of ['00', '30']) {
-      const time = `${hour.toString().padStart(2, '0')}:${minute}`;
-      slots.push({
-        value: time,
-        label: time,
-      });
-    }
-  }
-  return slots;
-};
-
 const CheckInForm: React.FC = () => {
-  const [formData, setFormData] = useState<CheckInFormData>({
-    patientName: '',
-    therapistId: '',
-    date: new Date().toISOString().split('T')[0],
-    timeSlot: '',
-  });
-
+  const [selectedTherapistId, setSelectedTherapistId] = useState<string>('');
   const [therapists, setTherapists] = useState<Therapist[]>([]);
-  const timeSlots = generateTimeSlots();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     const fetchTherapists = async () => {
@@ -72,11 +53,19 @@ const CheckInForm: React.FC = () => {
     fetchTherapists();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCheckIn = async () => {
+    if (!selectedTherapistId) {
+      setMessage({ type: 'error', text: 'Please select a therapist' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage(null);
+
     const token = config.getApiToken();
     if (!token) {
-      alert('No API token provided. Please add ?token=YOUR_TOKEN to the URL.');
+      setMessage({ type: 'error', text: 'No API token provided. Please add ?token=YOUR_TOKEN to the URL.' });
+      setIsSubmitting(false);
       return;
     }
 
@@ -87,7 +76,10 @@ const CheckInForm: React.FC = () => {
           'Content-Type': 'application/json',
           'x-api-key': token,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          therapistId: selectedTherapistId,
+          checkInTime: new Date().toISOString(),
+        }),
       });
 
       const result = await response.json();
@@ -96,55 +88,50 @@ const CheckInForm: React.FC = () => {
         throw new Error(result.message || `HTTP error! status: ${response.status}`);
       }
 
-      console.log('Form submitted:', result);
-      alert('Check-in submitted successfully!');
-      setFormData({
-        patientName: '',
-        therapistId: '',
-        date: new Date().toISOString().split('T')[0],
-        timeSlot: '',
-      });
+      console.log('Check-in submitted:', result);
+      setMessage({ type: 'success', text: 'Check-in completed successfully!' });
+      setSelectedTherapistId('');
     } catch (error) {
-      console.error('Error submitting form:', error);
-      alert(`Error submitting check-in: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error submitting check-in:', error);
+      setMessage({ 
+        type: 'error', 
+        text: `Error completing check-in: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }> | 
-    (Event & { target: { value: string; name: string } })
-  ) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name as string]: value,
-    }));
+  const handleTherapistChange = (event: any) => {
+    setSelectedTherapistId(event.target.value);
+    setMessage(null); // Clear any previous messages
   };
 
   return (
     <Container maxWidth="sm">
       <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          Therapist Check-in
+          Patient Check-in
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <TextField
-            fullWidth
-            label="Patient Name"
-            name="patientName"
-            value={formData.patientName}
-            onChange={handleChange}
-            required
-            margin="normal"
-          />
+        
+        <Typography variant="body1" sx={{ mb: 3, textAlign: 'center', color: 'text.secondary' }}>
+          Please select your therapist and click check-in
+        </Typography>
 
+        {message && (
+          <Alert severity={message.type} sx={{ mb: 3 }}>
+            {message.text}
+          </Alert>
+        )}
+
+        <Box sx={{ mt: 2 }}>
           <FormControl fullWidth margin="normal" required>
             <InputLabel>Therapist</InputLabel>
             <Select
-              name="therapistId"
-              value={formData.therapistId}
-              onChange={handleChange}
+              value={selectedTherapistId}
+              onChange={handleTherapistChange}
               label="Therapist"
+              disabled={isSubmitting}
             >
               {therapists.map((therapist) => (
                 <MenuItem key={therapist.id} value={therapist.id}>
@@ -154,43 +141,16 @@ const CheckInForm: React.FC = () => {
             </Select>
           </FormControl>
 
-          <TextField
-            fullWidth
-            label="Date"
-            name="date"
-            type="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <FormControl fullWidth margin="normal" required>
-            <InputLabel>Time Slot</InputLabel>
-            <Select
-              name="timeSlot"
-              value={formData.timeSlot}
-              onChange={handleChange}
-              label="Time Slot"
-            >
-              {timeSlots.map((slot) => (
-                <MenuItem key={slot.value} value={slot.value}>
-                  {slot.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
           <Button
-            type="submit"
+            onClick={handleCheckIn}
             fullWidth
             variant="contained"
             color="primary"
             size="large"
             sx={{ mt: 3 }}
+            disabled={!selectedTherapistId || isSubmitting}
           >
-            Check In
+            {isSubmitting ? 'Checking In...' : 'Check In'}
           </Button>
         </Box>
       </Paper>

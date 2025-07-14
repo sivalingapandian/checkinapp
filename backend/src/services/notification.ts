@@ -54,4 +54,52 @@ export class NotificationService {
       throw error;
     }
   }
+
+  async sendCheckInNotification(checkIn: Appointment, therapist: Therapist): Promise<void> {
+    try {
+      // Send email notification to therapist
+      const emailParams = {
+        Source: NOTIFICATION_EMAIL,
+        Destination: {
+          ToAddresses: [therapist.email],
+        },
+        Message: {
+          Subject: {
+            Data: 'Patient Check-in Notification',
+            Charset: 'UTF-8',
+          },
+          Body: {
+            Text: {
+              Data: `A patient has checked in for their appointment with you at ${new Date(checkIn.checkInTime || '').toLocaleString()}.`,
+              Charset: 'UTF-8',
+            },
+            Html: {
+              Data: `
+                <h2>Patient Check-in Notification</h2>
+                <p>A patient has checked in for their appointment with you.</p>
+                <p><strong>Check-in Time:</strong> ${new Date(checkIn.checkInTime || '').toLocaleString()}</p>
+                <p><strong>Therapist:</strong> ${therapist.name}</p>
+              `,
+              Charset: 'UTF-8',
+            },
+          },
+        },
+      };
+
+      await sesClient.send(new SendEmailCommand(emailParams));
+
+      // Send SMS notification to therapist if phone number is available
+      if (therapist.phone) {
+        const smsMessage = `Patient check-in notification: A patient has checked in for their appointment with you at ${new Date(checkIn.checkInTime || '').toLocaleString()}.`;
+        
+        await snsClient.send(new PublishCommand({
+          Message: smsMessage,
+          PhoneNumber: therapist.phone,
+        }));
+      }
+    } catch (error) {
+      console.error('Error sending check-in notification:', error);
+      // Don't throw error to avoid failing the check-in process
+    }
+  }
 } 

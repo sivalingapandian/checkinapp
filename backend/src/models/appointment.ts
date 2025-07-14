@@ -6,12 +6,13 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 export interface Appointment {
   id: string;
-  patientName: string;
+  patientName?: string; // Optional for HIPAA-compliant check-ins
   therapistId: string;
   therapistName: string;
-  date: string;
-  timeSlot: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  date?: string; // Optional for HIPAA-compliant check-ins
+  timeSlot?: string; // Optional for HIPAA-compliant check-ins
+  status?: 'scheduled' | 'completed' | 'cancelled'; // Optional for HIPAA-compliant check-ins
+  checkInTime?: string; // New field for check-in time
   createdAt: string;
 }
 

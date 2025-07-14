@@ -10,7 +10,7 @@ const therapistModel = new TherapistModel();
 const notificationService = new NotificationService();
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://d3elxw865x0zp9.cloudfront.net',
+  'Access-Control-Allow-Origin': 'https://d238r13n2gk9ba.cloudfront.net',
   'Access-Control-Allow-Credentials': true,
   'Access-Control-Allow-Headers': 'Content-Type,x-api-key',
   'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE',
@@ -54,14 +54,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    const { patientName, therapistId, date, timeSlot } = JSON.parse(event.body);
+    const { therapistId, checkInTime } = JSON.parse(event.body);
 
     // Validate required fields
-    if (!patientName || !therapistId || !date || !timeSlot) {
+    if (!therapistId) {
       return {
         statusCode: 400,
         headers: corsHeaders,
-        body: JSON.stringify({ message: 'Missing required fields' }),
+        body: JSON.stringify({ message: 'Therapist ID is required' }),
       };
     }
 
@@ -75,43 +75,26 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    // Check if time slot is available
-    const existingAppointments = await appointmentModel.getByTherapistAndDate(therapistId, date);
-    const isTimeSlotAvailable = !existingAppointments.some(
-      (appointment) => appointment.timeSlot === timeSlot && appointment.status === 'scheduled'
-    );
-
-    if (!isTimeSlotAvailable) {
-      return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({ message: 'Time slot is not available' }),
-      };
-    }
-
-    // Create appointment
-    const appointment = {
+    // Create check-in record
+    const checkInRecord = {
       id: uuidv4(),
-      patientName,
       therapistId,
       therapistName: therapist.name,
-      date,
-      timeSlot,
-      status: 'scheduled' as const,
+      checkInTime: checkInTime || new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
 
-    await appointmentModel.create(appointment);
+    await appointmentModel.create(checkInRecord);
 
-    // Send notification
-    await notificationService.sendAppointmentConfirmation(appointment, therapist);
+    // Send notification to therapist
+    await notificationService.sendCheckInNotification(checkInRecord, therapist);
 
     return {
       statusCode: 200,
       headers: corsHeaders,
       body: JSON.stringify({
-        message: 'Appointment scheduled successfully',
-        appointment,
+        message: 'Check-in completed successfully',
+        checkIn: checkInRecord,
       }),
     };
   } catch (error) {

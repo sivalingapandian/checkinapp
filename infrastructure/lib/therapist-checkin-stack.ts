@@ -57,7 +57,7 @@ export class TherapistCheckinStack extends cdk.Stack {
         },
       }),
       environment: {
-        API_TOKEN: process.env.API_TOKEN || 'your-secure-token-here',
+        API_TOKEN: process.env.CHECKIN_API_TOKEN || 'checkin-token-here',
         THERAPISTS_TABLE: therapistsTable.tableName,
         APPOINTMENTS_TABLE: appointmentsTable.tableName,
         NOTIFICATION_EMAIL: 'akhilan2007@gmail.com',
@@ -86,7 +86,7 @@ export class TherapistCheckinStack extends cdk.Stack {
         },
       }),
       environment: {
-        API_TOKEN: process.env.API_TOKEN || 'your-secure-token-here',
+        API_TOKEN: process.env.THERAPIST_API_TOKEN || 'therapist-token-here',
         THERAPISTS_TABLE: therapistsTable.tableName,
         APPOINTMENTS_TABLE: appointmentsTable.tableName,
         NOTIFICATION_EMAIL: 'akhilan2007@gmail.com',
@@ -130,7 +130,11 @@ export class TherapistCheckinStack extends cdk.Stack {
     // API Gateway
     const api = new apigateway.RestApi(this, 'TherapistCheckinApi', {
       defaultCorsPreflightOptions: {
-        allowOrigins: ['https://d3elxw865x0zp9.cloudfront.net'],
+        allowOrigins: [
+          'https://d3elxw865x0zp9.cloudfront.net',
+          'https://d238r13n2gk9ba.cloudfront.net',
+          'https://dmuca84s4ilj5.cloudfront.net'
+        ],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowHeaders: ['Content-Type', 'x-api-key'],
         maxAge: cdk.Duration.days(1),
@@ -164,10 +168,56 @@ export class TherapistCheckinStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    // CloudFront Distribution
+    // S3 Bucket for check-in app
+    const checkinBucket = new s3.Bucket(this, 'CheckinBucket', {
+      websiteIndexDocument: 'index.html',
+      publicReadAccess: true,
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: false,
+        ignorePublicAcls: false,
+        blockPublicPolicy: false,
+        restrictPublicBuckets: false,
+      }),
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // S3 Bucket for therapist management app
+    const therapistBucket = new s3.Bucket(this, 'TherapistBucket', {
+      websiteIndexDocument: 'index.html',
+      publicReadAccess: true,
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: false,
+        ignorePublicAcls: false,
+        blockPublicPolicy: false,
+        restrictPublicBuckets: false,
+      }),
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // CloudFront Distribution for main app
     const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
       defaultBehavior: {
         origin: new origins.S3Origin(frontendBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+      defaultRootObject: 'index.html',
+    });
+
+    // CloudFront Distribution for check-in app
+    const checkinDistribution = new cloudfront.Distribution(this, 'CheckinDistribution', {
+      defaultBehavior: {
+        origin: new origins.S3Origin(checkinBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+      defaultRootObject: 'index.html',
+    });
+
+    // CloudFront Distribution for therapist management app
+    const therapistDistribution = new cloudfront.Distribution(this, 'TherapistDistribution', {
+      defaultBehavior: {
+        origin: new origins.S3Origin(therapistBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       defaultRootObject: 'index.html',
@@ -180,6 +230,14 @@ export class TherapistCheckinStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'FrontendUrl', {
       value: distribution.distributionDomainName,
+    });
+
+    new cdk.CfnOutput(this, 'CheckinUrl', {
+      value: checkinDistribution.distributionDomainName,
+    });
+
+    new cdk.CfnOutput(this, 'TherapistUrl', {
+      value: therapistDistribution.distributionDomainName,
     });
   }
 } 

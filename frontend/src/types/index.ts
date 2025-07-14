@@ -13,16 +13,4 @@ export interface Appointment {
   date: string;
   timeSlot: string;
   status: 'scheduled' | 'completed' | 'cancelled';
-}
-
-export interface TimeSlot {
-  value: string;
-  label: string;
-}
-
-export interface CheckInFormData {
-  patientName: string;
-  therapistId: string;
-  date: string;
-  timeSlot: string;
 } 

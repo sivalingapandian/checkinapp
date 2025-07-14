@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeProvider, createTheme, CssBaseline, AppBar, Toolbar, Typography, Box } from '@mui/material';
-import CheckInForm from './components/CheckInForm';
+import TherapistManagement from './components/TherapistManagement';
 
 const theme = createTheme({
   palette: {
@@ -13,22 +13,22 @@ const theme = createTheme({
   },
 });
 
-function App() {
+function AppTherapist() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Therapist Check-in System
+            Therapist Management System
           </Typography>
         </Toolbar>
       </AppBar>
       <Box sx={{ p: 3 }}>
-        <CheckInForm />
+        <TherapistManagement />
       </Box>
     </ThemeProvider>
   );
 }
 
-export default App;
+export default AppTherapist; 

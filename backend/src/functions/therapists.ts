@@ -12,7 +12,7 @@ declare const console: {
 const therapistModel = new TherapistModel();
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://d3elxw865x0zp9.cloudfront.net',
+  'Access-Control-Allow-Origin': 'https://dmuca84s4ilj5.cloudfront.net',
   'Access-Control-Allow-Credentials': true,
   'Access-Control-Allow-Headers': 'Content-Type,x-api-key',
   'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE',
